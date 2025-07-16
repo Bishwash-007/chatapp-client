@@ -1,18 +1,30 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import React from "react";
-import { Link } from "expo-router";
+import { Link, Redirect } from "expo-router";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
-const onboarding = () => {
+const Onboarding = () => {
+  const { authUser } = useAuthStore();
+
+  if (authUser) {
+    return <Redirect href="/home" />;
+  }
+
   return (
-    <View className="h-full items-center justify-center flex flex-1 gap-6">
-      <Link href={`/(auth)/sign-in`} asChild>
-        <Text>SignIn</Text>
+    <View className="flex-1 items-center justify-center gap-6 bg-white dark:bg-black">
+      <Link href="/(auth)/sign-in" asChild>
+        <Pressable>
+          <Text className="text-lg text-blue-500">Sign In</Text>
+        </Pressable>
       </Link>
-      <Link href={`/(auth)/sign-up`} asChild>
-        <Text>SignUp</Text>
+
+      <Link href="/(auth)/sign-up" asChild>
+        <Pressable>
+          <Text className="text-lg text-green-500">Sign Up</Text>
+        </Pressable>
       </Link>
     </View>
   );
 };
 
-export default onboarding;
+export default Onboarding;
