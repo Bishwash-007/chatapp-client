@@ -15,6 +15,7 @@ import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
 import OAuthButton from "@/components/ui/OAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useThemeStore } from "@/hooks/useThemeStore";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -23,6 +24,7 @@ const SignIn = () => {
 
   const router = useRouter();
   const { logIn, isLoggingIn } = useAuthStore();
+  
 
   const validateForm = (): boolean => {
     if (!email || !password) {
@@ -70,7 +72,7 @@ const SignIn = () => {
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "center",
-            paddingHorizontal: 24,
+            paddingHorizontal: 18,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -78,13 +80,13 @@ const SignIn = () => {
         >
           <View className="flex-1 w-full px-6 justify-center items-center bg-muted-50 dark:bg-black">
             <Text className="font-poppinsSemibold text-3xl text-muted-800 dark:text-muted-100 mb-8 text-center">
-              Chatty
+              NightCall
             </Text>
 
             <View className="w-full space-y-5 mb-6">
               {/* Username */}
               <InputField
-                label="Username"
+                label="Email"
                 placeholder="yourname"
                 value={email}
                 onChangeText={setEmail}

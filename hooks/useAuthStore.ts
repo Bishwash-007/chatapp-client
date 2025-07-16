@@ -72,6 +72,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       const err = error as AxiosError;
       console.error("Sign up failed:", err.message);
+      throw err;
     } finally {
       set({ isSigningUp: false });
     }
@@ -92,6 +93,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       const err = error as AxiosError;
       console.error("Login failed:", err.message);
+      throw err;
     } finally {
       set({ isLoggingIn: false });
     }
@@ -103,6 +105,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       const err = error as AxiosError;
       console.error("Logout failed:", err.message);
+      throw err;
     } finally {
       await removeToken();
       set({ authUser: null });
