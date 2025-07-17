@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, Image } from "react-native";
+import Avatar from "./ui/Avatar";
 
 interface MessageListItemProps {
   imageUri: string;
@@ -19,14 +20,9 @@ const MessageListItem: React.FC<MessageListItemProps> = ({
   isNew = false,
 }) => {
   return (
-    <View className="flex-row items-start px-4 py-2">
+    <View className="flex-row items-start px-4 py-4">
       <View>
-        <Image
-          source={{ uri: imageUri }}
-          resizeMode="cover"
-          style={{ width: 48, height: 48 }}
-          className="rounded-full"
-        />
+        <Avatar imageUri={imageUri} />
         {isActive && (
           <View className="absolute bottom-0 right-0 bg-green-500 border-2 border-white size-4 rounded-full" />
         )}
@@ -51,7 +47,7 @@ const MessageListItem: React.FC<MessageListItemProps> = ({
             <Text className="text-xs text-white">new</Text>
           </View>
         )}
-        <Text className="font-poppinsLight text-sm text-muted-600 dark:text-muted-300">
+        <Text className="font-poppinsLight text-sm text-muted-600 dark:text-muted-300 justify-end">
           {timestamp}
         </Text>
       </View>

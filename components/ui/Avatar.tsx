@@ -1,12 +1,14 @@
-import React from "react";
-import { View, Image } from "react-native";
+import React, { useState } from "react";
+import { View, Image, ImageProps } from "react-native";
 
 interface AvatarProps {
-  imageUri: string;
+  imageUri?: string;
   size?: number;
   className?: string;
   isActive?: boolean;
 }
+
+let placeholderImg = require("@/assets/images/placeholder.png");
 
 const Avatar: React.FC<AvatarProps> = ({
   imageUri,
@@ -14,14 +16,21 @@ const Avatar: React.FC<AvatarProps> = ({
   className = "",
   isActive = false,
 }) => {
+  const [source, setSource] = useState(
+    imageUri ? { uri: imageUri } : placeholderImg
+  );
+
+  const handleError = () => setSource(placeholderImg);
+
   return (
     <View
       className={`relative ${className}`}
       style={{ width: size, height: size }}
     >
       <Image
-        source={{ uri: imageUri }}
+        source={source}
         resizeMode="cover"
+        onError={handleError}
         className="w-full h-full rounded-full"
       />
 

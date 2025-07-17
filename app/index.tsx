@@ -21,8 +21,8 @@ export default function Index() {
   }
 
   if (authUser) {
-    return <Redirect href="/(root)/(tabs)/home" />;
+    return <Redirect href="/home" />;
   }
 
-  return <Redirect href="/(root)/(tabs)/home" />;
+  return <Redirect href="/home" />;
 }

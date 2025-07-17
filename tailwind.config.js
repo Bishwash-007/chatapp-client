@@ -28,6 +28,7 @@ module.exports = {
         },
       },
       fontSize: {
+        xss: ["8px", { lineHeight: "12px" }],
         xs: ["12px", { lineHeight: "16px" }],
         sm: ["14px", { lineHeight: "20px" }],
         base: ["16px", { lineHeight: "24px" }],

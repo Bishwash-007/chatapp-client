@@ -1,118 +1,182 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useDebounce } from "@/hooks/useDebounce";
 import SearchBar from "@/components/SearchBar";
-import { Ionicons } from "@expo/vector-icons";
 import Avatar from "@/components/ui/Avatar";
-import MessageListsItem from "@/components/MessageListsItem";
+import { useChatStore } from "@/hooks/useChatStore";
+import { useRouter } from "expo-router";
 import MessageListItem from "@/components/MessageListsItem";
-import { getToken } from "@/lib/token";
 
-interface Contact {
-  id: string;
-  name: string;
+export interface User {
+  __v: number;
+  _id: string;
+  avatar?: string;
+  email: string;
+  fullName: string;
 }
-const mockContacts: Contact[] = [
-  { id: "1", name: "Alice Johnson" },
-  { id: "2", name: "Bob Smith" },
-  { id: "3", name: "Charlie Garcia" },
-  { id: "4", name: "David Lee" },
+
+export interface FetchFriendsResponse {
+  data: User[];
+  message: string;
+  statusCode: number;
+  success: boolean;
+}
+
+const mockMessages = [
+  {
+    _id: "1",
+    avatar: "https://i.pravatar.cc/150?img=1",
+    fullName: "Elon Musk",
+    lastMessage: "Hey, got that rocket fuel?",
+    timestamp: "2m ago",
+    isNew: true,
+  },
+  {
+    _id: "2",
+    avatar: "https://i.pravatar.cc/150?img=2",
+    fullName: "Mark Zuckerberg",
+    lastMessage: "Meta now owns Mars.",
+    timestamp: "5m ago",
+    isNew: false,
+  },
+  {
+    _id: "3",
+    avatar: "https://i.pravatar.cc/150?img=3",
+    fullName: "Bill Gates",
+    lastMessage: "Just finished another vaccine batch.",
+    timestamp: "10m ago",
+    isNew: true,
+  },
 ];
 
 export default function ContactsScreen() {
   const [text, setText] = useState("");
   const debouncedText = useDebounce(text, 300);
-  const [results, setResults] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const router = useRouter();
+
+  const {
+    getUsers,
+    users,
+    setSelectedUser,
+    selectedUser,
+    isUserLoading,
+    onlineUser,
+  } = useChatStore();
+
   useEffect(() => {
-    const query = debouncedText.trim();
-    setLoading(query.length > 0);
+    getUsers();
+  }, [selectedUser, getUsers]);
 
-    const timer = setTimeout(() => {
-      const filtered = query
-        ? mockContacts.filter((c) =>
-            c.name.toLowerCase().includes(query.toLowerCase())
-          )
-        : [];
-      setResults(filtered);
-      setLoading(false);
-    }, 500);
+  const handleRoute = (user: User) => {
+    setSelectedUser(user);
+    router.push("/chat");
+  };
 
-    return () => clearTimeout(timer);
-  }, [debouncedText]);
-
-  const handleCreateChat = () => {};
+  const filteredUsers =
+    debouncedText.trim().length > 0
+      ? users.filter((u) =>
+          u.fullName.toLowerCase().includes(debouncedText.toLowerCase())
+        )
+      : users;
 
   return (
-    <View className="flex-1 pt-safe px-4">
-      {/* header  */}
-      <View className="flex flex-row justify-between py-4 ">
+    <View className="flex-1 pt-safe px-4 bg-white dark:bg-black">
+      {/* Header */}
+      <View className="flex flex-row justify-between py-4 items-center">
         <Text className="font-poppins text-xl dark:text-muted-50 text-muted-900">
           NightCall
         </Text>
-
-        <TouchableOpacity onPress={handleCreateChat}>
-          <Ionicons name="create-outline" size={24} color="black" />
+        <TouchableOpacity onPress={() => console.log("Create Chat")}>
+          <Ionicons
+            name="create-outline"
+            size={24}
+            color="black"
+            className="dark:text-white"
+          />
         </TouchableOpacity>
       </View>
-      <SearchBar
-        text={text}
-        onTextChange={setText}
-        isTyping={loading || results.length > 0}
-        onClear={() => setText("")}
-        placeholder="Search contacts..."
-      />
 
-      {/* onilne flatlist  */}
-      <View>
-        <Text className="font-poppinsLight text-sm py-2">online</Text>
-        <View className="flex-row gap-3">
-          {Array.from({ length: 10 }, (_, i) => (
-            <Avatar
-              imageUri="https://i.pinimg.com/736x/ab/76/a4/ab76a49af041b0bb4ac65d8c624a171a.jpg"
-              size={72}
-              isActive={true}
-              className="ring-2 ring-gray-300"
-            />
-          ))}
-        </View>
-      </View>
-
-      {/* messages flatlist  */}
-      <>
-        <Text className="font-poppinsLight text-lg dark:text-muted-50 text-muted-900 pt-4">
-          Messages
-        </Text>
-        {Array.from({ length: 10 }, (_, i) => (
+      {/* Main List */}
+      <FlatList
+        data={mockMessages}
+        renderItem={({ item }) => (
           <MessageListItem
-            imageUri="https://i.pinimg.com/736x/ab/76/a4/ab76a49af041b0bb4ac65d8c624a171a.jpg"
-            name="Miru Magar"
-            message="Kafle Ji Kata ho?"
-            timestamp="9:30 PM"
-            isNew={true}
+            imageUri={item.avatar}
+            name={item.fullName}
+            message={item.lastMessage}
+            timestamp={item.timestamp}
             isActive={true}
+            isNew={item.isNew}
           />
-        ))}
-      </>
+        )}
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => (
+          <View className="h-[1px] bg-muted-100 dark:bg-muted-800 mx-4" />
+        )}
+        ListHeaderComponent={
+          <>
+            {/* Search Bar */}
+            <SearchBar
+              text={text}
+              onTextChange={setText}
+              isTyping={false}
+              onClear={() => setText("")}
+              placeholder="Search contacts..."
+              className="mb-4"
+            />
+
+            {/* Horizontal Avatar List */}
+            <FlatList
+              data={filteredUsers}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleRoute(item)}>
+                  <View className="items-center justify-center mx-2 pt-4">
+                    <Avatar isActive={true} imageUri={item.avatar} />
+                    <Text
+                      numberOfLines={1}
+                      className="font-poppins text-xs mt-1 text-center max-w-[60px] text-neutral-700 dark:text-neutral-300"
+                    >
+                      {item.fullName.length > 10
+                        ? `${item.fullName.slice(0, 8)}...`
+                        : item.fullName}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              horizontal
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+              showsHorizontalScrollIndicator={false}
+              ListEmptyComponent={
+                isUserLoading ? (
+                  <ActivityIndicator size="small" className="mt-4" />
+                ) : (
+                  <Text className="text-sm text-center text-muted-400 mt-4">
+                    No contacts found.
+                  </Text>
+                )
+              }
+            />
+
+            {/* Placeholder for actual chat list below */}
+            <View className="mt-6">
+              <Text className="text-base font-poppinsSemibold text-muted-700 dark:text-white">
+                Chats
+              </Text>
+              {/* Map or FlatList of chat previews goes here */}
+            </View>
+          </>
+        }
+      />
     </View>
   );
-  {
-    /* {loading ? (
-          <ActivityIndicator className="mt-4" size="large" color="#007AFF" />
-        ) : (
-          <FlatList
-            data={results}
-            keyExtractor={(i) => i.id}
-            renderItem={({ item }) => (
-              <Text className="mt-2 text-lg">{item.name}</Text>
-            )}
-            ListEmptyComponent={
-              <Text className="mt-4 text-center text-gray-500">
-                {results.length ? null : "No contacts found."}
-              </Text>
-            }
-          />
-        )} */
-  }
 }

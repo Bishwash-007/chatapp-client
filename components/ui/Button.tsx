@@ -5,6 +5,7 @@ export type ButtonProps = TouchableOpacityProps & {
   title: string;
   className?: string;
   icon?: React.ReactNode;
+  loading?: boolean;
 };
 
 const Button: React.FC<ButtonProps> = ({
