@@ -1,30 +1,33 @@
 import React from "react";
-import { View, Image, ViewStyle } from "react-native";
+import { View, Image } from "react-native";
 
 interface AvatarProps {
-  uri: string;
+  imageUri: string;
   size?: number;
-  style?: ViewStyle;
   className?: string;
+  isActive?: boolean;
 }
 
 const Avatar: React.FC<AvatarProps> = ({
-  uri,
-  size = 60,
-  style,
+  imageUri,
+  size = 48,
   className = "",
+  isActive = false,
 }) => {
   return (
     <View
-      style={[{ width: size, height: size, borderRadius: size / 2 }, style]}
-      className={`overflow-hidden bg-muted-200 dark:bg-muted-800 ${className}`}
+      className={`relative ${className}`}
+      style={{ width: size, height: size }}
     >
       <Image
-        source={{ uri }}
+        source={{ uri: imageUri }}
         resizeMode="cover"
-        style={{ width: size, height: size }}
-        className="rounded-full"
+        className="w-full h-full rounded-full"
       />
+
+      {isActive && (
+        <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
+      )}
     </View>
   );
 };

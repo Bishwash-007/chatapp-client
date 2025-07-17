@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, TouchableOpacityProps } from "react-native";
 export type ButtonProps = TouchableOpacityProps & {
   title: string;
   className?: string;
-  icon?: React.ReactNode; // Optional icon on the left side
+  icon?: React.ReactNode;
 };
 
 const Button: React.FC<ButtonProps> = ({

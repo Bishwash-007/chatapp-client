@@ -26,3 +26,8 @@ export const removeToken = async () => {
     console.error("Error removing token", err);
   }
 };
+
+export const hasToken = async (): Promise<boolean> => {
+  const token = await getToken();
+  return !!token;
+};

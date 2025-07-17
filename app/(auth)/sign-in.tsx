@@ -15,7 +15,6 @@ import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
 import OAuthButton from "@/components/ui/OAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { useThemeStore } from "@/hooks/useThemeStore";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
