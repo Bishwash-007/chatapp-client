@@ -6,7 +6,7 @@ interface MessageListItemProps {
   imageUri: string;
   name: string;
   message: string;
-  timestamp: string;
+  timestamp?: string;
   isNew?: boolean;
   isActive: boolean;
 }

@@ -1,27 +1,33 @@
 import { Stack } from "expo-router";
 import { useCustomFonts } from "@/hooks/useCustomFonts";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 
 import "../global.css";
+import { ThemeWrapper } from "@/context/ThemeWrapper";
 
 export default function RootLayout() {
-  const [loaded, error] = useCustomFonts();
+  const [fontsLoaded, fontError] = useCustomFonts();
+
+  const hideSplash = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
 
   useEffect(() => {
     SplashScreen.preventAutoHideAsync();
+    hideSplash();
+  }, [hideSplash]);
 
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
-
-  if (!loaded && !error) return null;
+  if (!fontsLoaded && !fontError) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(root)" />
-      <Stack.Screen name="(auth)" />
-    </Stack>
+    <ThemeWrapper>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(root)" />
+      </Stack>
+    </ThemeWrapper>
   );
 }

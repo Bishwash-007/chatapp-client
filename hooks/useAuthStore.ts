@@ -2,6 +2,9 @@ import { create } from "zustand";
 import { AxiosError } from "axios";
 import axiosInstance from "../lib/axios";
 import { storeToken, removeToken } from "../lib/token";
+import { io } from "socket.io-client";
+
+const BASE_URL = "http://192.168.1.91:8000";
 
 type Credentials = {
   email: string;
@@ -25,28 +28,34 @@ interface AuthState {
   isLoggingIn: boolean;
   isUpdatingProfile: boolean;
   isCheckingAuth: boolean;
-  onlineUsers: [];
+  onlineUsers: string[];
+  socket: any;
 
   checkAuth: () => Promise<void>;
   signUp: (payload: SignUpPayload) => Promise<void>;
   logIn: (payload: LogInPayload) => Promise<void>;
   updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
   logOut: () => Promise<void>;
+  disconnectSocket: () => void;
+  connectSocket: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   authUser: null,
   isSigningUp: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
   onlineUsers: [],
+  socket: null,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true });
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data.data });
+
+      get().connectSocket();
     } catch (error) {
       const err = error as AxiosError;
       console.error("checkAuth error:", err.message);
@@ -70,6 +79,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await storeToken(token);
       set({ authUser: user });
       console.log("Signed up successfully");
+      get().connectSocket();
     } catch (error) {
       const err = error as AxiosError;
       console.error("Sign up failed:", err.message);
@@ -86,14 +96,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         email,
         password,
       });
-
       const { token, user } = res.data.data;
-      console.log(user);
-      console.log(token);
 
       await storeToken(token);
       set({ authUser: user });
-      console.log("Logged in successfully");
+      get().connectSocket();
     } catch (error) {
       const err = error as AxiosError;
       console.error("Login failed:", err.message);
@@ -106,6 +113,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   logOut: async () => {
     try {
       await axiosInstance.post("/auth/log-out");
+      set({ authUser: null });
+      get().disconnectSocket();
     } catch (error) {
       const err = error as AxiosError;
       console.error("Logout failed:", err.message);
@@ -138,7 +147,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const updatedUser = res.data.data.user;
       set({ authUser: updatedUser });
-
       console.log("Profile Updated Successfully");
     } catch (error) {
       const err = error as AxiosError;
@@ -147,5 +155,29 @@ export const useAuthStore = create<AuthState>((set) => ({
     } finally {
       set({ isUpdatingProfile: false });
     }
+  },
+
+  connectSocket: () => {
+    const { authUser } = get();
+    if (!authUser || get().socket?.connected) {
+      return;
+    }
+    const socket = io(BASE_URL, {
+      query: {
+        userId: authUser._id,
+      },
+    });
+    socket.connect();
+    set({ socket: socket });
+
+    socket.on("getOnlineUsers", (userIds) => {
+      set({ onlineUsers: userIds });
+    });
+  },
+  disconnectSocket: () => {
+    if (!get().socket?.connected) {
+      return;
+    }
+    get().socket.disconnect();
   },
 }));

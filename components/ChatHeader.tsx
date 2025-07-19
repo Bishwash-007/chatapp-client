@@ -5,20 +5,20 @@ import Avatar from "./ui/Avatar";
 import { useRouter } from "expo-router";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 
-const ChatHeader = () => {
+const ChatHeader = ({ onPress }: { onPress: () => void }) => {
   const { selectedUser } = useChatStore();
   const router = useRouter();
 
   return (
     <View className="flex-row items-center justify-between px-4 py-4 bg-white dark:bg-black border-b-hairline border-muted-200 rounded-xl">
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.back()} className="">
+      <TouchableOpacity onPress={onPress} className="">
         <Ionicons name="chevron-back-outline" size={26} color="black" />
       </TouchableOpacity>
 
       {/* User Info */}
       <View className="flex-row items-center gap-2 flex-1 px-2">
-        <Avatar imageUri={selectedUser?.avatar} size={40} isActive />
+        <Avatar imageUri={selectedUser?.image} size={40} isActive />
         <View>
           <Text className="font-poppinsMedium text-base text-muted-900 dark:text-white">
             {selectedUser?.fullName || "Unknown"}

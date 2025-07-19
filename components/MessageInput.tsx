@@ -3,9 +3,9 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  TextInputProps,
   Image,
   FlatList,
+  TextInputProps,
 } from "react-native";
 import { EvilIcons, Feather, Ionicons } from "@expo/vector-icons";
 
@@ -38,7 +38,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         onPress={() => onRemoveImage(item)}
         className="absolute top-1 right-1 bg-black/60 rounded-full p-1"
       >
-        <Ionicons name="close" size={16} color="white" />
+        <Ionicons name="close" size={16} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -48,15 +48,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
       {mediaFiles.length > 0 && (
         <FlatList
           data={mediaFiles}
-          keyExtractor={(uri) => uri}
+          keyExtractor={(uri, index) => uri + index}
           renderItem={renderImageItem}
-          horizontal={false}
           numColumns={4}
+          scrollEnabled={false}
           contentContainerStyle={{ marginBottom: 10 }}
         />
       )}
 
-      {/* Input Row */}
       <View className="flex-row items-center gap-3">
         <TouchableOpacity onPress={onPickImage}>
           <EvilIcons name="image" size={28} color="black" />

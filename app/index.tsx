@@ -1,12 +1,10 @@
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { getToken } from "@/lib/token";
 import { Redirect } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 export default function Index() {
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
-  console.log(authUser);
 
   useEffect(() => {
     checkAuth();
@@ -20,9 +18,7 @@ export default function Index() {
     );
   }
 
-  if (authUser) {
-    return <Redirect href="/home" />;
-  }
-
-  return <Redirect href="/home" />;
+  return (
+    <Redirect href={authUser ? "/(root)/(tabs)/home" : "/(auth)/sign-in"} />
+  );
 }

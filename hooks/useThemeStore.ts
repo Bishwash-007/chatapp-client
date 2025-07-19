@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Appearance, ColorSchemeName } from "react-native";
+import { Appearance } from "react-native";
 
 type Theme = "light" | "dark" | "system";
 
@@ -35,9 +35,10 @@ export const useThemeStore = create<ThemeStore>()(
             current === "light"
               ? "dark"
               : current === "dark"
-              ? "system"
-              : "light";
-          const resolved = nextTheme === "system" ? resolveSystemTheme() : nextTheme;
+                ? "system"
+                : "light";
+          const resolved =
+            nextTheme === "system" ? resolveSystemTheme() : nextTheme;
           set({ theme: nextTheme, resolvedTheme: resolved });
         },
       };

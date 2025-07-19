@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -7,86 +7,44 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+
 import { useDebounce } from "@/hooks/useDebounce";
 import SearchBar from "@/components/SearchBar";
 import Avatar from "@/components/ui/Avatar";
-import { useChatStore } from "@/hooks/useChatStore";
-import { useRouter } from "expo-router";
 import MessageListItem from "@/components/MessageListsItem";
-
-export interface User {
-  __v: number;
-  _id: string;
-  avatar?: string;
-  email: string;
-  fullName: string;
-}
-
-export interface FetchFriendsResponse {
-  data: User[];
-  message: string;
-  statusCode: number;
-  success: boolean;
-}
-
-const mockMessages = [
-  {
-    _id: "1",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    fullName: "Elon Musk",
-    lastMessage: "Hey, got that rocket fuel?",
-    timestamp: "2m ago",
-    isNew: true,
-  },
-  {
-    _id: "2",
-    avatar: "https://i.pravatar.cc/150?img=2",
-    fullName: "Mark Zuckerberg",
-    lastMessage: "Meta now owns Mars.",
-    timestamp: "5m ago",
-    isNew: false,
-  },
-  {
-    _id: "3",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    fullName: "Bill Gates",
-    lastMessage: "Just finished another vaccine batch.",
-    timestamp: "10m ago",
-    isNew: true,
-  },
-];
+import { useChatStore, User } from "@/hooks/useChatStore";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 export default function ContactsScreen() {
   const [text, setText] = useState("");
   const debouncedText = useDebounce(text, 300);
-  const [loading, setLoading] = useState(false);
-
   const router = useRouter();
 
-  const {
-    getUsers,
-    users,
-    setSelectedUser,
-    selectedUser,
-    isUserLoading,
-    onlineUser,
-  } = useChatStore();
+  const { getUsers, users, isUserLoading } = useChatStore();
+  const { onlineUsers } = useAuthStore();
+
+  const { selectedUser, setSelectedUser, getMessages } = useChatStore();
 
   useEffect(() => {
     getUsers();
-  }, [selectedUser, getUsers]);
+  }, [users]);
+
+  const activeUsers = useMemo(
+    () => users.filter((user) => onlineUsers.includes(user._id)),
+    [users, onlineUsers]
+  );
+
+  const filteredActiveUsers = useMemo(() => {
+    if (!debouncedText.trim()) return activeUsers;
+    const query = debouncedText.toLowerCase();
+    return activeUsers.filter((u) => u.fullName.toLowerCase().includes(query));
+  }, [debouncedText, activeUsers]);
 
   const handleRoute = (user: User) => {
     setSelectedUser(user);
     router.push("/chat");
   };
-
-  const filteredUsers =
-    debouncedText.trim().length > 0
-      ? users.filter((u) =>
-          u.fullName.toLowerCase().includes(debouncedText.toLowerCase())
-        )
-      : users;
 
   return (
     <View className="flex-1 pt-safe px-4 bg-white dark:bg-black">
@@ -105,26 +63,22 @@ export default function ContactsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Main List */}
+      {/* Contact List */}
       <FlatList
-        data={mockMessages}
+        data={users}
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <MessageListItem
-            imageUri={item.avatar}
-            name={item.fullName}
-            message={item.lastMessage}
-            timestamp={item.timestamp}
-            isActive={true}
-            isNew={item.isNew}
-          />
-        )}
-        showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => (
-          <View className="h-[1px] bg-muted-100 dark:bg-muted-800 mx-4" />
+          <TouchableOpacity onPress={() => handleRoute(item)}>
+            <MessageListItem
+              imageUri={item.image}
+              name={item.fullName}
+              message="Hello"
+              isActive={onlineUsers.includes(item._id)}
+            />
+          </TouchableOpacity>
         )}
         ListHeaderComponent={
           <>
-            {/* Search Bar */}
             <SearchBar
               text={text}
               onTextChange={setText}
@@ -134,47 +88,50 @@ export default function ContactsScreen() {
               className="mb-4"
             />
 
-            {/* Horizontal Avatar List */}
-            <FlatList
-              data={filteredUsers}
-              keyExtractor={(item) => item._id}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => handleRoute(item)}>
-                  <View className="items-center justify-center mx-2 pt-4">
-                    <Avatar isActive={true} imageUri={item.avatar} />
-                    <Text
-                      numberOfLines={1}
-                      className="font-poppins text-xs mt-1 text-center max-w-[60px] text-neutral-700 dark:text-neutral-300"
-                    >
-                      {item.fullName.length > 10
-                        ? `${item.fullName.slice(0, 8)}...`
-                        : item.fullName}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-              horizontal
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-              showsHorizontalScrollIndicator={false}
-              ListEmptyComponent={
-                isUserLoading ? (
-                  <ActivityIndicator size="small" className="mt-4" />
-                ) : (
-                  <Text className="text-sm text-center text-muted-400 mt-4">
-                    No contacts found.
-                  </Text>
-                )
-              }
-            />
+            {filteredActiveUsers.length > 0 && (
+              <FlatList
+                data={filteredActiveUsers}
+                keyExtractor={(item) => item._id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity onPress={() => handleRoute(item)}>
+                    <View className="items-center justify-center mx-2 pt-4">
+                      <Avatar isActive imageUri={item.image} />
+                      <Text
+                        numberOfLines={1}
+                        className="font-poppins text-xs mt-1 text-center max-w-[60px] text-neutral-700 dark:text-neutral-300"
+                      >
+                        {item.fullName.length > 10
+                          ? `${item.fullName.slice(0, 8)}...`
+                          : item.fullName}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
 
-            {/* Placeholder for actual chat list below */}
             <View className="mt-6">
               <Text className="text-base font-poppinsSemibold text-muted-700 dark:text-white">
                 Chats
               </Text>
-              {/* Map or FlatList of chat previews goes here */}
             </View>
           </>
+        }
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => (
+          <View className="h-[1px] bg-muted-100 dark:bg-muted-800 mx-4" />
+        )}
+        ListEmptyComponent={
+          isUserLoading ? (
+            <ActivityIndicator size="large" className="mt-6" />
+          ) : (
+            <Text className="text-muted-400 text-center mt-6">
+              No chats available
+            </Text>
+          )
         }
       />
     </View>
